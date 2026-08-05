@@ -1,11 +1,11 @@
 /**
  * SVG export for pen plotters.
  *
- * The polylines are already in millimetres, so we emit an SVG whose user units
- * equal millimetres: width/height carry the "mm" unit and the viewBox is the
- * raw paper size. Plotter toolchains (axicli, saxi, InkScape) then plot at true
- * physical scale with no rescaling. Y is downward, matching both our geometry
- * and the SVG coordinate system.
+ * Polylines are already in millimetres, so the SVG's user units equal mm
+ * (width/height carry "mm", viewBox is the raw paper size) and it plots at true
+ * physical scale. Each pen becomes its own Inkscape-labelled layer group with
+ * that pen's real stroke color and nib width — the format AxiDraw "layers" mode
+ * plots pass-by-pass, pausing for pen swaps.
  */
 
 // Compact number: up to 3 decimals, trailing zeros stripped.
@@ -21,23 +21,32 @@ function toSubpath(line) {
   return d.trim()
 }
 
-export function buildSVG(polylines, paper, { strokeWidth = 0.3 } = {}) {
-  const d = polylines
+function layerGroup(layer, index) {
+  const d = layer.polylines
     .filter((line) => line.length > 1)
     .map(toSubpath)
     .join(' ')
+  const label = `${index + 1} ${layer.pen.name}`
+  return `  <g inkscape:groupmode="layer" inkscape:label="${label}" fill="none" stroke="${layer.pen.color}" stroke-width="${layer.pen.width}" stroke-linecap="round" stroke-linejoin="round">
+    <path d="${d}"/>
+  </g>`
+}
+
+export function buildSVG(layers, paper) {
+  const groups = layers
+    .filter((l) => l.polylines.some((line) => line.length > 1))
+    .map(layerGroup)
+    .join('\n')
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${paper.width}mm" height="${paper.height}mm" viewBox="0 0 ${paper.width} ${paper.height}">
-  <g fill="none" stroke="black" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round">
-    <path d="${d}"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="${paper.width}mm" height="${paper.height}mm" viewBox="0 0 ${paper.width} ${paper.height}">
+${groups}
 </svg>
 `
 }
 
-export function downloadSVG(polylines, paper, filename = 'plot.svg') {
-  const svg = buildSVG(polylines, paper)
+export function downloadSVG(layers, paper, filename = 'plot.svg') {
+  const svg = buildSVG(layers, paper)
   const blob = new Blob([svg], { type: 'image/svg+xml' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')

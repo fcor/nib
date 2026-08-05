@@ -1,13 +1,15 @@
 import Panel from './Panel.jsx'
 import Select from '../controls/Select.jsx'
-import Toggle from '../controls/Toggle.jsx'
 import { downloadSVG } from '../../export/exportSVG.js'
+
+/** Flip when PDF export actually exists — see BACKLOG.md. */
+const SHOW_PDF_EXPORT = false
 
 /** Common plotter paper sizes (mm). Landscape/portrait handled later. */
 export const PAPER_SIZES = [
-  { value: 'a3', label: 'A3 (297×420)', width: 297, height: 420 },
-  { value: 'a4', label: 'A4 (210×297)', width: 210, height: 297 },
-  { value: 'a5', label: 'A5 (148×210)', width: 148, height: 210 },
+  { value: 'a3', name: 'A3', label: 'A3 — 297 × 420 mm', width: 297, height: 420 },
+  { value: 'a4', name: 'A4', label: 'A4 — 210 × 297 mm', width: 210, height: 297 },
+  { value: 'a5', name: 'A5', label: 'A5 — 148 × 210 mm', width: 148, height: 210 },
 ]
 
 function svgFilename(sourceName) {
@@ -18,38 +20,40 @@ function svgFilename(sourceName) {
 export default function ExportPanel({
   paper,
   onPaper,
-  polylines,
+  layers,
   paperSize,
   sourceName,
-  optimize,
-  onOptimize,
 }) {
-  const canExport = polylines && polylines.length > 0
+  const canExport =
+    layers && layers.some((l) => l.polylines.some((line) => line.length > 1))
 
   return (
-    <Panel step={4} title="Export">
+    <Panel step={5} title="Export">
       <Select
-        label="Paper"
+        label="Paper size"
         value={paper}
         options={PAPER_SIZES.map((p) => ({ value: p.value, label: p.label }))}
         onChange={onPaper}
       />
-      <Toggle label="Optimize travel" value={optimize} onChange={onOptimize} />
       <div className="export__actions">
         <button
           type="button"
           className="btn btn--primary"
           disabled={!canExport}
-          onClick={() => downloadSVG(polylines, paperSize, svgFilename(sourceName))}
+          onClick={() => downloadSVG(layers, paperSize, svgFilename(sourceName))}
         >
           ↧ Export SVG
         </button>
-        <button type="button" className="btn" disabled>
-          ↧ Export PDF
-        </button>
+        {SHOW_PDF_EXPORT ? (
+          <button type="button" className="btn" disabled>
+            ↧ Export PDF
+          </button>
+        ) : null}
       </div>
       <p className="export__note">
-        {canExport ? 'SVG is in mm — plots at true scale.' : 'Upload an image to export.'}
+        {canExport
+          ? 'The SVG is measured in millimetres, so it plots at real size — no scaling needed.'
+          : 'Upload an image first — there are no paths to export yet.'}
       </p>
     </Panel>
   )

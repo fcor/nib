@@ -1,11 +1,13 @@
-import { toneFromBrightness } from '../image/tone.js'
-
 /**
  * Serpentine Wiggle
  *
- * A single continuous line sweeps left↔right in rows down the page. In darker
- * regions of the source image the line gains amplitude, so the extra ink laid
- * down reads as tone. Very pen-plotter friendly: one long path, no pen-ups.
+ * A single continuous line sweeps left↔right in rows down the page. Darker
+ * regions (higher tone) give the line more amplitude, so the extra ink reads as
+ * tone. Very pen-plotter friendly: one long path, no pen-ups.
+ *
+ * `process` receives a `tone(nx, ny) -> [0,1]` sampler (0 = flat, 1 = full
+ * amplitude); the caller decides whether that comes from brightness or an ink
+ * channel. `params._offset` (0..1) shifts the rows so color layers interleave.
  */
 export const serpentine = {
   id: 'serpentine',
@@ -19,33 +21,23 @@ export const serpentine = {
     { key: 'invert', label: 'Invert', type: 'toggle', default: false },
   ],
 
-  /**
-   * @param image  prepared image with sample(nx, ny) -> brightness [0,1]
-   * @param params current parameter values
-   * @param area   draw rectangle in mm { x, y, w, h }
-   * @returns polylines: array of one polyline (array of [x, y] in mm)
-   */
-  process(image, params, area) {
-    const { lineSpacing, amplitude, frequency, whitePoint, invert } = params
+  process(tone, params, area) {
+    const { lineSpacing, amplitude, frequency } = params
     const spacing = Math.max(0.5, lineSpacing)
+    const rowOffset = (params._offset ?? 0) * spacing
     const rows = Math.max(1, Math.floor(area.h / spacing))
-    // Amplitude is a fraction of the half-row space, so rows can never collide
-    // regardless of line spacing. 0.95 leaves a hair of gap between crests.
     const maxAmp = (amplitude / 100) * (spacing / 2) * 0.95
-    // Enough samples to resolve each wave crest smoothly (~6 per wave).
     const samplesPerRow = Math.max(80, Math.round(frequency * 6))
 
     const line = []
     for (let r = 0; r < rows; r++) {
-      const rowY = area.y + spacing * (r + 0.5)
+      const rowY = area.y + spacing * (r + 0.5) + rowOffset
       const leftToRight = r % 2 === 0
       for (let s = 0; s <= samplesPerRow; s++) {
         const t = s / samplesPerRow
         const along = leftToRight ? t : 1 - t
         const worldX = area.x + along * area.w
-        const brightness = image.sample(along, (rowY - area.y) / area.h)
-        const amp = toneFromBrightness(brightness, whitePoint, invert) * maxAmp
-        // Phase tied to spatial position so waves stay aligned row to row.
+        const amp = tone(along, (rowY - area.y) / area.h) * maxAmp
         const phase = along * frequency * Math.PI * 2
         const py = rowY + Math.sin(phase) * amp
         line.push([worldX, py])

@@ -1,14 +1,22 @@
 import Panel from './Panel.jsx'
 import Slider from '../controls/Slider.jsx'
 import Toggle from '../controls/Toggle.jsx'
+import Select from '../controls/Select.jsx'
 import { algorithmsById } from '../../algorithms/index.js'
 
-export default function ParametersPanel({ algorithmId, params, onParam }) {
+export default function ParametersPanel({ algorithmId, params, onParam, colorMode }) {
   const algorithm = algorithmsById[algorithmId]
+
+  // In CMYK each layer's tone is an ink amount, not brightness, so the
+  // separation already decides what's dark — `generate.js` passes `false` for
+  // invert there and the control has nothing to act on.
+  const visible = algorithm.params.filter(
+    (p) => !(p.key === 'invert' && colorMode === 'cmyk'),
+  )
 
   return (
     <Panel step={3} title="Parameters">
-      {algorithm.params.map((p) => {
+      {visible.map((p) => {
         if (p.type === 'range') {
           return (
             <Slider
@@ -29,6 +37,17 @@ export default function ParametersPanel({ algorithmId, params, onParam }) {
               key={p.key}
               label={p.label}
               value={params[p.key]}
+              onChange={(v) => onParam(p.key, v)}
+            />
+          )
+        }
+        if (p.type === 'select') {
+          return (
+            <Select
+              key={p.key}
+              label={p.label}
+              value={params[p.key]}
+              options={p.options}
               onChange={(v) => onParam(p.key, v)}
             />
           )

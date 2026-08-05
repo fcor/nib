@@ -1,124 +1,181 @@
+/* ── Type roles ─────────────────────────────────────────────────────────
+   Two voices from one file: mono caps carry labels, chrome and numbers;
+   the proportional axis carries anything you read as a sentence.          */
+.u-mono,
+.app__brand,
+.panel__title,
+.panel__step,
+.segmented__option,
+.btn,
+.control__value,
+.readout {
+  font-variation-settings: var(--axis-mono);
+}
+
 /* ── Layout ─────────────────────────────────────────────────────────── */
 .app {
   height: 100vh;
   display: grid;
   grid-template-columns: 1fr 320px;
+  background: var(--surface);
 }
 
 .app__stage {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 1rem 1.25rem;
-  gap: 1rem;
+  padding: var(--space-md) var(--space-lg);
+  gap: var(--space-md);
 }
 
 .app__brand {
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-size: 20px;
+  font-weight: var(--wght-bold);
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink);
 }
 
+/* One surface throughout — the rail is separated by a rule, not a fill. */
 .app__panels {
-  border-left: 1px solid var(--border);
-  background: var(--panel);
+  border-left: 1px solid var(--rule);
   overflow-y: auto;
-  padding: 1rem;
+  padding: var(--space-md);
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-sm);
 }
 
 /* ── Canvas stage ───────────────────────────────────────────────────── */
 .stage {
+  position: relative;
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.85rem;
+  min-height: 0;
+}
+
+/* Absolute so the canvas can fill the stage without feeding its own resize. */
+.stage__canvas,
+.p5-canvas {
+  position: absolute;
+  inset: 0;
 }
 
 .stage__canvas canvas {
   display: block;
-  border: 1px solid var(--border);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
-  background: #fff;
+}
+
+.stage__view {
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
 .stage__readout {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--text-dim);
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  max-width: 22rem;
+}
+
+/* ── Readout ────────────────────────────────────────────────────────── */
+.readout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  font-size: 13px;
+  line-height: 1.4;
   font-variant-numeric: tabular-nums;
 }
 
-.stage__dot {
-  margin: 0 0.5rem;
-  opacity: 0.5;
+.readout__row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
 }
 
-.stage__dim {
-  opacity: 0.7;
+.readout__label {
+  min-width: 6.5rem;
+  color: var(--ink-muted);
+}
+
+.readout__value {
+  color: var(--ink);
+  font-weight: var(--wght-medium);
 }
 
 /* ── Panels ─────────────────────────────────────────────────────────── */
 .panel {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.02);
-  padding: 0.85rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: var(--space-md);
 }
 
 .panel__title {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin: 0 0 0.75rem;
-  font-size: 0.72rem;
+  gap: var(--space-xs);
+  margin: 0 0 var(--space-sm);
+  font-size: 12px;
+  font-weight: var(--wght-bold);
+  line-height: 1.33;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  color: var(--ink);
 }
 
+/* The system's `chip`, sized to a single digit. */
 .panel__step {
   display: inline-grid;
   place-items: center;
-  width: 1.25rem;
-  height: 1.25rem;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text);
-  font-size: 0.7rem;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  background: var(--ink);
+  color: var(--surface);
+  font-size: 10px;
+  font-weight: var(--wght-bold);
+  letter-spacing: 0.12em;
+  text-indent: 0.12em; /* offset the trailing track so the digit sits centred */
 }
 
 .panel__body {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: var(--space-sm);
 }
 
 /* ── Source panel ───────────────────────────────────────────────────── */
 .dropzone {
-  border: 1.5px dashed var(--border);
-  border-radius: 6px;
+  border: 1px dashed var(--ink);
+  border-radius: var(--radius-sm);
   min-height: 96px;
   display: grid;
   place-items: center;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color var(--dur) var(--ease),
+    background var(--dur) var(--ease);
   overflow: hidden;
 }
 
-.dropzone--over {
+.dropzone:hover {
+  border-color: var(--ink-muted);
+  background: var(--rule);
+}
+
+.dropzone--over,
+.dropzone--over:hover {
   border-color: var(--accent);
-  background: rgba(120, 170, 255, 0.08);
+  background: var(--accent-wash);
 }
 
 .dropzone__hint {
   margin: 0;
   text-align: center;
-  color: var(--text-dim);
-  font-size: 0.85rem;
+  color: var(--ink-muted);
+  font-size: 14px;
 }
 
 .dropzone__browse {
@@ -133,67 +190,122 @@
 }
 
 .source__meta {
-  margin: 0.5rem 0 0;
-  font-size: 0.78rem;
-  color: var(--text-dim);
+  margin: var(--space-sm) 0 0;
+  font-size: 12px;
+  line-height: 1.33;
+  color: var(--ink-muted);
   word-break: break-all;
 }
 
 .algorithm__desc {
   margin: 0;
-  font-size: 0.8rem;
-  color: var(--text-dim);
+  font-size: 12px;
+  line-height: 1.33;
+  color: var(--ink-muted);
 }
 
 /* ── Controls ───────────────────────────────────────────────────────── */
 .control {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  font-size: 0.82rem;
+  gap: var(--space-sm);
+  font-size: 14px;
 }
 
+/* 6rem, not 5.5 — "Hatch spacing" measures 90px against the old 88px. */
 .control--slider {
   display: grid;
-  grid-template-columns: 5.5rem 1fr 3.75rem;
+  grid-template-columns: 6rem 1fr 3.75rem;
   align-items: center;
 }
 
 .control__label {
-  color: var(--text-dim);
+  color: var(--ink-muted);
 }
 
 .control__value {
   text-align: right;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+  color: var(--ink);
 }
 
 .control__unit {
-  color: var(--text-dim);
+  color: var(--ink-muted);
 }
 
+/* Styled rather than left to accent-color: the native thumb is oversized for
+   a 320px rail, and once the thumb is custom the track has to be too. */
 .control--slider input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
   width: 100%;
-  accent-color: var(--accent);
+  height: 20px; /* hit area, not the visible track */
+  background: transparent;
+  cursor: pointer;
 }
 
+.control--slider input[type='range']::-webkit-slider-runnable-track {
+  height: 2px;
+  background: var(--ink);
+  border-radius: var(--radius-full);
+}
+
+.control--slider input[type='range']::-moz-range-track {
+  height: 2px;
+  background: var(--ink);
+  border-radius: var(--radius-full);
+}
+
+.control--slider input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  margin-top: -5px; /* centre the 12px thumb on the 2px track */
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--ink);
+  cursor: pointer;
+}
+
+.control--slider input[type='range']::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--ink);
+  cursor: pointer;
+}
+
+/* ── Toggle ─────────────────────────────────────────────────────────── */
 .control--toggle {
   justify-content: space-between;
   cursor: pointer;
 }
 
+/* Visually hidden, not display:none — the checkbox must stay focusable. */
 .control--toggle input {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .control__switch {
+  flex: none;
   width: 34px;
   height: 20px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-full);
+  background: var(--rule);
+  border: 1px solid var(--ink);
   position: relative;
-  transition: background 0.15s;
+  transition: background var(--dur-switch) var(--ease);
 }
 
 .control__switch::after {
@@ -201,73 +313,357 @@
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #fff;
-  transition: transform 0.15s;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+  background: var(--ink);
+  transition: transform var(--dur-switch) var(--ease),
+    background var(--dur-switch) var(--ease);
 }
 
 .control--toggle input:checked + .control__switch {
-  background: var(--accent);
+  background: var(--ink);
 }
 
 .control--toggle input:checked + .control__switch::after {
+  background: var(--surface);
   transform: translateX(14px);
 }
 
+.control--toggle input:focus-visible + .control__switch {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Select ─────────────────────────────────────────────────────────── */
+/* The native chevron sits at a browser-chosen inset, so it can't be squared
+   with the text. Drawn here instead: background-origin is the padding box, so
+   `right var(--space-sm)` puts the chevron's edge exactly as far from the
+   border as `padding-left` puts the text — 12px on both sides.
+   The stroke is hardcoded black; it has to track --ink by hand. */
 .control--select select {
   flex: 1;
-  background: var(--bg);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 0.4rem 0.5rem;
-  font-size: 0.82rem;
+  min-width: 0;
+  height: 40px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: var(--surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23000000' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-sm) center;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-sm);
+  /* clear the 10px chevron plus its own gap, so long labels never run under it */
+  padding-right: calc(var(--space-sm) + 10px + var(--space-xs));
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease);
 }
 
-/* ── Segmented control ──────────────────────────────────────────────── */
-.segmented {
-  display: inline-flex;
-  border: 1px solid var(--border);
-  border-radius: 6px;
+.control--select select:hover {
+  border-color: var(--ink-muted);
+}
+
+/* ── Pen rows (color panel) ─────────────────────────────────────────── */
+.penrow {
+  display: grid;
+  grid-template-columns: 1rem 1fr 24px;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: 14px;
+}
+
+/* Mono has no channel, so the letter column goes rather than sitting empty. */
+.penrow--nochannel {
+  grid-template-columns: 1fr 24px;
+}
+
+.penrow__channel {
+  font-variation-settings: var(--axis-mono);
+  font-size: 12px;
+  font-weight: var(--wght-bold);
+  letter-spacing: 0.1em;
+  color: var(--ink);
+  text-align: center;
+}
+
+/* Swatch and hex share one frame — the swatch is flush to the left end, so
+   there's no second border boxing it in. */
+.penrow__field {
+  display: flex;
+  align-items: stretch;
+  height: 32px;
+  min-width: 0;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius-sm);
   overflow: hidden;
+  background: var(--surface);
+  transition: border-color var(--dur) var(--ease);
 }
 
-.segmented__option {
+.penrow__field:focus-within {
+  border-color: var(--accent);
+}
+
+.penrow__picker {
+  flex: none;
+  width: 30px;
+  padding: 0;
+  border: 0;
+  border-right: 1px solid var(--ink);
+  border-radius: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* The UA wraps the swatch in its own padded box — strip it so the colour
+   reaches all four edges. */
+.penrow__picker::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.penrow__picker::-webkit-color-swatch {
+  border: 0;
+}
+
+.penrow__picker::-moz-color-swatch {
+  border: 0;
+}
+
+.penrow__hex {
+  flex: 1;
+  min-width: 0;
   border: 0;
   background: transparent;
-  color: var(--text-dim);
-  padding: 0.35rem 0.9rem;
-  font-size: 0.8rem;
+  color: var(--ink);
+  padding: 0 var(--space-xs);
+  font: inherit;
+  font-variation-settings: var(--axis-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.penrow__hex:focus {
+  outline: 0;
+}
+
+/* ── Layer eye ──────────────────────────────────────────────────────── */
+.penrow__eye {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink);
   cursor: pointer;
-  border-right: 1px solid var(--border);
+}
+
+.penrow__eye:hover {
+  background: var(--rule);
+}
+
+.eye {
+  width: 18px;
+  height: 18px;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.eye__iris {
+  fill: currentColor;
+  stroke: none;
+}
+
+/* The two states pass each other vertically — open sinks out, shut drops in. */
+.eye__open,
+.eye__closed {
+  transition: opacity var(--dur-switch) var(--ease),
+    transform var(--dur-switch) var(--ease);
+}
+
+.eye__open {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.eye__closed {
+  opacity: 0;
+  transform: translateY(-2px);
+}
+
+.penrow__eye--off {
+  color: var(--ink-muted);
+}
+
+.penrow__eye--off .eye__open {
+  opacity: 0;
+  transform: translateY(2px);
+}
+
+.penrow__eye--off .eye__closed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Disabled row (channel not in the separation) ───────────────────────
+   Deliberately not a dimmer version of hidden. Hidden stays at full strength
+   and lets the closed eye carry the state; disabled ghosts the frame, hatches
+   the swatch and drops the eye, because there's no layer to toggle.          */
+.penrow--disabled .penrow__field {
+  border-color: var(--rule);
+}
+
+.penrow--disabled .penrow__channel,
+.penrow--disabled .penrow__hex {
+  color: var(--ink-faint);
+}
+
+/* Single red slash — the "none" convention. Perpendicular to the `to bottom
+   right` axis, so the band reads bottom-left → top-right. */
+.penrow__picker--none {
+  border-right-color: var(--rule);
+  background-color: var(--surface);
+  background-image: linear-gradient(
+    to bottom right,
+    transparent calc(50% - 0.75px),
+    var(--error) calc(50% - 0.75px),
+    var(--error) calc(50% + 0.75px),
+    transparent calc(50% + 0.75px)
+  );
+}
+
+.penrow__hex--static {
+  display: flex;
+  align-items: center;
+}
+
+/* ── Segmented control ───────────────────────────────────────────────────
+   Knockout indicator: an ink row underneath, an inverted row on top clipped
+   to a sliding pill. `--seg-index` / `--seg-count` come from the component.  */
+.segmented {
+  position: relative;
+  display: inline-block;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.segmented__row {
+  display: flex;
+}
+
+/* Equal widths are what let the two rows track each other with percentages
+   alone — the pill's width is one segment, so no measuring is needed. */
+.segmented__option {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-right: 1px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  padding: var(--space-xs) var(--space-sm);
+  font: inherit;
+  font-size: 12px;
+  font-weight: var(--wght-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color var(--dur-switch) var(--ease);
 }
 
 .segmented__option:last-child {
   border-right: 0;
 }
 
-.segmented__option--active {
-  background: var(--accent);
-  color: #fff;
+/* Dividers either side of the pill. Fades in step with the slide so they
+   don't pop at the start of the move. */
+.segmented__option--nodiv {
+  border-right-color: transparent;
+}
+
+/* The pill: one segment wide, slid to the active index. */
+.segmented__fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--seg-index) * 100% / var(--seg-count));
+  width: calc(100% / var(--seg-count));
+  background: var(--ink);
+  overflow: hidden;
+  pointer-events: none;
+  transition: left var(--dur-switch) var(--ease);
+}
+
+/* Full-width copy inside that window, pushed back by the same distance the
+   pill moved forward, so it stays registered with the row underneath.
+   Both transitions must match exactly or the labels shear during the slide. */
+.segmented__row--knockout {
+  position: absolute;
+  top: 0;
+  left: calc(var(--seg-index) * -100%);
+  width: calc(var(--seg-count) * 100%);
+  color: var(--surface);
+  transition: left var(--dur-switch) var(--ease);
+}
+
+/* The option sets `color` itself, so inheriting white from the row isn't
+   enough to beat it — the knockout labels have to be recoloured directly. */
+.segmented__row--knockout .segmented__option {
+  color: var(--surface);
+  /* Dividers belong to the un-selected run only. Left visible, the one at the
+     pill's own edge draws a stray line across the fill. */
+  border-right-color: transparent;
+}
+
+/* Hover only reads on segments the pill isn't covering. */
+.segmented__option:hover {
+  background: var(--rule);
+}
+
+.segmented__row--knockout .segmented__option:hover {
+  background: transparent;
 }
 
 /* ── Export ─────────────────────────────────────────────────────────── */
 .export__actions {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-xs);
 }
 
 .btn {
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text);
-  border-radius: 6px;
-  padding: 0.5rem;
-  font-size: 0.85rem;
+  height: 40px;
+  border: 1px solid var(--ink);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-md);
+  font: inherit;
+  font-size: 14px;
+  font-weight: var(--wght-medium);
   cursor: pointer;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--ink-muted);
+  color: var(--ink-muted);
 }
 
 .btn:disabled {
@@ -276,13 +672,20 @@
 }
 
 .btn--primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--surface);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--ink-muted);
+  border-color: var(--ink-muted);
+  color: var(--surface);
 }
 
 .export__note {
   margin: 0;
-  font-size: 0.72rem;
-  color: var(--text-dim);
+  font-size: 12px;
+  line-height: 1.33;
+  color: var(--ink-muted);
 }

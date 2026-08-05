@@ -1,89 +1,121 @@
 import { useEffect, useRef } from 'react'
 import p5 from 'p5'
+import { canvasTheme as T } from '../styles/canvasTheme.js'
 
-const CANVAS_W = 620
-const CANVAS_H = 460
-const PAD = 24
+const PAD = T.pad
 
 /**
- * Renders the paper (in mm) and the generated polylines, fit to the canvas.
+ * Renders the paper (in mm) and the generated layers, fit to the canvas.
  * - "original": source image drawn into the draw area
- * - "processed": polylines
- * - "both": faint image under the polylines
+ * - "processed": each layer's polylines, in the pen's real color + width
+ *
+ * The canvas fills its container and follows it on resize.
+ * Layers are drawn with MULTIPLY blending so overlapping colors mix like ink.
  */
-export default function P5Canvas({ source, polylines, drawArea, paperSize, view }) {
+export default function P5Canvas({ source, layers, drawArea, paperSize, view }) {
   const containerRef = useRef(null)
   const instanceRef = useRef(null)
-  const stateRef = useRef({ source, polylines, drawArea, paperSize, view, img: null })
+  const stateRef = useRef({ source, layers, drawArea, paperSize, view, img: null })
 
-  // Mount the sketch once.
   useEffect(() => {
+    const el = containerRef.current
+
     const sketch = (p) => {
       p.setup = () => {
-        p.createCanvas(CANVAS_W, CANVAS_H)
+        const { width, height } = el.getBoundingClientRect()
+        p.createCanvas(Math.max(1, Math.floor(width)), Math.max(1, Math.floor(height)))
         p.noLoop()
       }
 
       p.draw = () => {
-        const { source, polylines, drawArea, paperSize, view, img } = stateRef.current
-        p.background(38)
-
+        const { source, layers, drawArea, paperSize, view, img } = stateRef.current
+        p.background(T.desk)
         if (!paperSize) return
 
-        // Paper -> canvas transform (mm to px).
         const sc = Math.min(
-          (CANVAS_W - PAD * 2) / paperSize.width,
-          (CANVAS_H - PAD * 2) / paperSize.height,
+          (p.width - PAD * 2) / paperSize.width,
+          (p.height - PAD * 2) / paperSize.height,
         )
         const pw = paperSize.width * sc
         const ph = paperSize.height * sc
-        const ox = (CANVAS_W - pw) / 2
-        const oy = (CANVAS_H - ph) / 2
+        const ox = (p.width - pw) / 2
+        const oy = (p.height - ph) / 2
         const mx = (mm) => ox + mm * sc
         const my = (mm) => oy + mm * sc
 
-        // Page.
+        // White sheet on a white desk — the shadow is what separates them.
+        const ctx = p.drawingContext
+        ctx.save()
+        ctx.shadowColor = T.shadowColor
+        ctx.shadowBlur = T.shadowBlur
+        ctx.shadowOffsetY = T.shadowOffsetY
         p.noStroke()
-        p.fill(255)
+        p.fill(T.sheet)
         p.rect(ox, oy, pw, ph)
+        ctx.restore()
 
-        const showOriginal = view === 'original' || view === 'both'
-        const showProcessed = view === 'processed' || view === 'both'
-
-        if (showOriginal && img && drawArea) {
-          p.push()
-          if (view === 'both') p.tint(255, 70)
+        if (view === 'original' && img && drawArea) {
           p.image(img, mx(drawArea.x), my(drawArea.y), drawArea.w * sc, drawArea.h * sc)
+        }
+
+        if (view === 'processed' && layers && layers.length) {
+          p.push()
+          p.blendMode(p.MULTIPLY)
+          p.noFill()
+          for (const layer of layers) {
+            p.stroke(layer.pen.color)
+            p.strokeWeight(Math.max(0.5, layer.pen.width * sc))
+            for (const line of layer.polylines) {
+              p.beginShape()
+              for (const [px, py] of line) p.vertex(mx(px), my(py))
+              p.endShape()
+            }
+          }
           p.pop()
         }
 
-        if (showProcessed && polylines && polylines.length) {
-          p.noFill()
-          p.stroke(20)
-          p.strokeWeight(0.8)
-          for (const line of polylines) {
-            p.beginShape()
-            for (const [px, py] of line) p.vertex(mx(px), my(py))
-            p.endShape()
-          }
-        }
-
         if (!source) {
-          p.noStroke()
-          p.fill(170)
-          p.textAlign(p.CENTER, p.CENTER)
-          p.textSize(14)
-          p.text('Upload an image to begin', CANVAS_W / 2, CANVAS_H / 2)
+          // Drawn on the raw context so the font weight can be stated — p5's
+          // text state can't express a variable-font axis or weight.
+          ctx.save()
+          ctx.fillStyle = T.emptyText
+          ctx.font = T.emptyFont
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText(
+            'Drop an image in the panel to start plotting',
+            p.width / 2,
+            p.height / 2,
+          )
+          ctx.restore()
         }
       }
     }
 
-    const instance = new p5(sketch, containerRef.current)
+    const instance = new p5(sketch, el)
     instanceRef.current = instance
-    return () => instance.remove()
+
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect
+      instance.resizeCanvas(Math.max(1, Math.floor(width)), Math.max(1, Math.floor(height)))
+      instance.redraw()
+    })
+    observer.observe(el)
+
+    // Canvas text doesn't reflow when a webfont arrives the way DOM text does,
+    // so the empty state would keep the fallback face. Redraw once it's ready.
+    let live = true
+    document.fonts?.ready.then(() => {
+      if (live) instance.redraw()
+    })
+
+    return () => {
+      live = false
+      observer.disconnect()
+      instance.remove()
+    }
   }, [])
 
-  // Load the source image into p5 whenever it changes.
   useEffect(() => {
     stateRef.current.source = source
     const inst = instanceRef.current
@@ -99,11 +131,10 @@ export default function P5Canvas({ source, polylines, drawArea, paperSize, view 
     }
   }, [source])
 
-  // Redraw whenever geometry or view settings change.
   useEffect(() => {
-    Object.assign(stateRef.current, { polylines, drawArea, paperSize, view })
+    Object.assign(stateRef.current, { layers, drawArea, paperSize, view })
     instanceRef.current?.redraw()
-  }, [polylines, drawArea, paperSize, view])
+  }, [layers, drawArea, paperSize, view])
 
   return <div className="p5-canvas" ref={containerRef} />
 }

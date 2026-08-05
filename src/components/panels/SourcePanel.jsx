@@ -19,7 +19,16 @@ export default function SourcePanel({ source, onSource }) {
     <Panel step={1} title="Source">
       <div
         className={'dropzone' + (dragOver ? ' dropzone--over' : '')}
+        role="button"
+        tabIndex={0}
+        aria-label={source ? `Source image: ${source.name}` : 'Choose an image'}
         onClick={() => inputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            inputRef.current?.click()
+          }
+        }}
         onDragOver={(e) => {
           e.preventDefault()
           setDragOver(true)

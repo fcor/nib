@@ -2,14 +2,28 @@ import P5Canvas from './P5Canvas.jsx'
 import SegmentedControl from './controls/SegmentedControl.jsx'
 
 const VIEW_OPTIONS = [
-  { value: 'original', label: 'Original' },
-  { value: 'processed', label: 'Processed' },
-  { value: 'both', label: 'Both' },
+  { value: 'original', label: 'Source image' },
+  { value: 'processed', label: 'Plot preview' },
 ]
+
+/** Millimetres get long fast — switch to metres once a line passes 1 m. */
+function formatLength(mm) {
+  if (mm >= 1000) return `${(mm / 1000).toFixed(1)} m`
+  return `${Math.round(mm)} mm`
+}
+
+function Readout({ label, value }) {
+  return (
+    <div className="readout__row">
+      <span className="readout__label">{label}</span>
+      <span className="readout__value">{value}</span>
+    </div>
+  )
+}
 
 export default function CanvasStage({
   source,
-  polylines,
+  layers,
   drawArea,
   paperSize,
   pathLen,
@@ -22,39 +36,39 @@ export default function CanvasStage({
       <div className="stage__canvas">
         <P5Canvas
           source={source}
-          polylines={polylines}
+          layers={layers}
           drawArea={drawArea}
           paperSize={paperSize}
           view={view}
         />
       </div>
 
-      <p className="stage__readout">
-        {paperSize ? `${paperSize.width} × ${paperSize.height} mm` : '— mm'}
-        {drawArea ? (
-          <>
-            <span className="stage__dot">·</span>
-            <span className="stage__dim">
-              art {Math.round(drawArea.w)} × {Math.round(drawArea.h)} mm
-            </span>
-          </>
-        ) : null}
-        <span className="stage__dot">·</span>
-        <span className="stage__dim">
-          {pathLen ? `~${Math.round(pathLen).toLocaleString()} mm path` : 'no path'}
-        </span>
-        {travelLen ? (
-          <>
-            <span className="stage__dot">·</span>
-            <span className="stage__dim">
-              ↑ {Math.round(travelLen).toLocaleString()} mm travel
-            </span>
-          </>
-        ) : null}
-      </p>
-
-      <div className="stage__toggle">
+      <div className="stage__view">
         <SegmentedControl value={view} options={VIEW_OPTIONS} onChange={onView} />
+      </div>
+
+      <div className="stage__readout readout">
+        <Readout
+          label="Paper"
+          value={
+            paperSize
+              ? `${paperSize.name} — ${paperSize.width} × ${paperSize.height} mm`
+              : 'none selected'
+          }
+        />
+        {drawArea ? (
+          <Readout
+            label="Artwork"
+            value={`${Math.round(drawArea.w)} × ${Math.round(drawArea.h)} mm`}
+          />
+        ) : null}
+        <Readout
+          label="Line to draw"
+          value={pathLen ? formatLength(pathLen) : 'nothing yet'}
+        />
+        {travelLen ? (
+          <Readout label="Travel moves" value={formatLength(travelLen)} />
+        ) : null}
       </div>
     </div>
   )

@@ -1,15 +1,77 @@
-:root {
-  --bg: #1a1a1a;
-  --panel: #242424;
-  --text: rgba(255, 255, 255, 0.87);
-  --text-dim: rgba(255, 255, 255, 0.55);
-  --border: rgba(255, 255, 255, 0.12);
-  --accent: #5a8dee;
+/* ── Bakemono ───────────────────────────────────────────────────────────
+   One variable file carries every voice. Two axes:
+     wght  100–800
+     mono     0–1000   0 = proportional (Text) · 500 = Stereo · 1000 = Mono
+   Set the axis at the use site, not here — the font-variation-settings
+   @font-face descriptor has patchy support for custom axes.                */
+@font-face {
+  font-family: 'Bakemono';
+  src: url('./fonts/Bakemono-Variable.ttf') format('truetype');
+  font-weight: 100 800;
+  font-display: swap;
+}
 
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1.5;
-  color: var(--text);
-  background: var(--bg);
+:root {
+  /* ── Color ─────────────────────────────────────────────────────────── */
+  --ink: #000000;
+  --ink-muted: #4b4b4b;
+  /* Inert content only — sits below the AA text floor on purpose, which is
+     allowed because nothing wearing it is operable. */
+  --ink-faint: #9e9e9e;
+  --accent: #0066cc;
+  --accent-wash: rgba(0, 102, 204, 0.08);
+  --surface: #ffffff;
+  --error: #d92d20;
+
+  /* Structural dividers only. At 1.24:1 it fails the 3:1 bar, so it must
+     never outline something the user has to find and operate — those get
+     a 1px --ink hairline instead. */
+  --rule: #e5e7eb;
+
+  /* ── Type ──────────────────────────────────────────────────────────── */
+  --font: 'Bakemono', ui-monospace, system-ui, sans-serif;
+
+  --axis-text: 'mono' 0;
+  --axis-mono: 'mono' 1000;
+
+  /* The drawn weights sit at 450/560/670 — not 400/600/700. */
+  --wght-regular: 450;
+  --wght-medium: 560;
+  --wght-bold: 670;
+
+  /* ── Spacing ───────────────────────────────────────────────────────── */
+  /* The direction's ramp is 2/12/16/24/48; 4 and 8 are added so the scale
+     stays monotonic and the tighter rows have a step to land on. */
+  --space-hair: 2px;
+  --space-2xs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 48px;
+
+  /* ── Shape ─────────────────────────────────────────────────────────── */
+  --radius-none: 0px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-full: 9999px;
+
+  /* ── Motion ────────────────────────────────────────────────────────── */
+  --dur: 120ms;
+  /* The switch knob travels 14px — at 120ms that reads as a jump cut. */
+  --dur-switch: 200ms;
+  /* No overshoot curve here on purpose: a springing indicator overshoots its
+     target and briefly uncovers what it's meant to be masking. */
+  --ease: cubic-bezier(0.2, 0, 0.2, 1);
+
+  font-family: var(--font);
+  font-variation-settings: var(--axis-text);
+  font-weight: var(--wght-regular);
+  font-size: 14px;
+  line-height: 1.43;
+  letter-spacing: 0.1px;
+  color: var(--ink);
+  background: var(--surface);
 
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -24,7 +86,24 @@ body {
   min-height: 100vh;
 }
 
-h1 {
-  font-size: 1.5rem;
+h1,
+h2 {
   margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+/* Never removed. Mouse users don't see it; keyboard users always do. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }

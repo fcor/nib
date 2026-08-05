@@ -1,15 +1,13 @@
-import { toneFromBrightness } from '../image/tone.js'
-
 /**
  * Spiral Halftone
  *
- * A single continuous Archimedean spiral winds out from the center. Its radius
- * gains a sinusoidal in/out wiggle whose amplitude tracks darkness, so dark
- * regions lay down extra ink between rings and read as tone — the radial
- * sibling of the serpentine. One long path, no pen-ups.
+ * A single continuous Archimedean spiral winds out from the center; its radius
+ * gains a sinusoidal in/out wiggle whose amplitude tracks tone, so dark regions
+ * lay down extra ink between rings. One long path, no pen-ups. The spiral fills
+ * the largest circle that fits the draw area (image is center-cropped).
  *
- * The spiral fills the largest circle that fits in the draw area, so the image
- * is effectively center-cropped to a circle.
+ * `process` receives a `tone(nx, ny) -> [0,1]` sampler. `params._offset` (0..1)
+ * rotates the whole spiral so color layers interleave.
  */
 export const spiral = {
   id: 'spiral',
@@ -23,11 +21,12 @@ export const spiral = {
     { key: 'invert', label: 'Invert', type: 'toggle', default: false },
   ],
 
-  process(image, params, area) {
-    const { ringSpacing, amplitude, frequency, whitePoint, invert } = params
-    const pitch = Math.max(0.5, ringSpacing) // mm gained per revolution
+  process(tone, params, area) {
+    const { ringSpacing, amplitude, frequency } = params
+    const pitch = Math.max(0.5, ringSpacing)
     const maxAmp = (amplitude / 100) * (pitch / 2) * 0.95
-    const freq = Math.max(1, frequency) // radial wiggles per revolution
+    const freq = Math.max(1, frequency)
+    const rot = (params._offset ?? 0) * Math.PI * 2
 
     const cx = area.x + area.w / 2
     const cy = area.y + area.h / 2
@@ -35,25 +34,20 @@ export const spiral = {
 
     const TWO_PI = Math.PI * 2
     const thetaMax = TWO_PI * (R / pitch)
-    // Resolve both the circle smoothly and each wiggle crest (~8 steps/wave).
     const stepsPerRev = Math.max(160, Math.round(freq * 8))
     const dTheta = TWO_PI / stepsPerRev
 
     const line = []
     for (let theta = 0; theta <= thetaMax; theta += dTheta) {
       const rBase = pitch * (theta / TWO_PI)
-      const cos = Math.cos(theta)
-      const sin = Math.sin(theta)
+      const ang = theta + rot
+      const cos = Math.cos(ang)
+      const sin = Math.sin(ang)
 
-      // Sample on the base spiral for stability; map into the draw area.
       const bx = cx + rBase * cos
       const by = cy + rBase * sin
-      const brightness = image.sample((bx - area.x) / area.w, (by - area.y) / area.h)
-
-      // Fade the wiggle in over the first revolution so it can't drive r
-      // negative near the center.
       const rampIn = Math.min(1, theta / TWO_PI)
-      const amp = toneFromBrightness(brightness, whitePoint, invert) * maxAmp * rampIn
+      const amp = tone((bx - area.x) / area.w, (by - area.y) / area.h) * maxAmp * rampIn
       const r = rBase + Math.sin(theta * freq) * amp
 
       line.push([cx + r * cos, cy + r * sin])
