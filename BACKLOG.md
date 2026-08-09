@@ -15,6 +15,20 @@ they touch. Notes point at the files a change would most likely start from.
       Open questions: which units the incoming file uses (px vs mm vs viewBox),
       whether to honour the SVG's own stroke colours as separate pen layers, and
       what to do with fills (ignore, or hand off to the fill techniques item).
+- [ ] **Restore settings from an exported SVG** — drop one of our own exports
+      back in and come back to the state that made it: algorithm, params,
+      paper, colour mode, pen colours. Every export already carries the record
+      — `<plot:settings>` inside `<metadata>`, written by `export/plotMeta.js`
+      — so this is the read half: parse the XML, find the element by the
+      `urn:nib:settings` namespace, check `app`/`version`, and push the
+      values back into the `App.jsx` state hooks (`params` is already a flat
+      key→value object per algorithm, so it maps straight onto `setParams`).
+      Turns exports into a free save format. Shares an entry point with the
+      SVG import item above — the same drop should tell "one of ours" from a
+      foreign file and take a different route for each. Open questions: what to
+      do when the source image is gone (the filename is recorded, the pixels
+      aren't — probably restore every setting and ask for the image), and how
+      to handle a `version` from a future build.
 
 ## Canvas & artwork placement
 
@@ -45,9 +59,10 @@ they touch. Notes point at the files a change would most likely start from.
       preview, the export, and the length/travel readouts together. The filter
       runs *after* `_offset` is assigned, so hiding one layer never shifts the
       strokes of the others.
-- [ ] **Solo a layer** — one click to isolate, as the fast path of the above.
-      Now cheap: the `visible` flags exist, so this is a modifier-click (or a
-      small button) that sets one true and the rest false, plus a way back.
+- ~~**Solo a layer**~~ — dropped. Hiding the other layers already gives the
+      identical result, and with at most four pens that's three clicks. A solo
+      button would only have saved those clicks and remembered the previous
+      visibility set — no capability the show/hide toggles don't already cover.
 - [ ] **Zoom into the artwork** — scroll/pinch to zoom and drag to pan the
       preview, to check stroke density and pen overlap up close. A viewport
       transform in `P5Canvas.jsx` (the `mx`/`my` mm→px mapping already funnels
@@ -109,6 +124,15 @@ they touch. Notes point at the files a change would most likely start from.
       (AxiDraw/EBB, GRBL, or plain G-code) instead of exporting an SVG and
       handing it to another tool. Needs pen up/down + speed settings, a job
       queue, and pause/resume. Big one, but it closes the loop.
+- [x] **Name exports by what made them, and bake the settings in** — files were
+      all called `<source>.svg`, so variations piled up as `plot (1).svg`.
+      Done: `export/plotMeta.js`. Names are
+      `portrait-crosshatch-a5-cmyk-20260809-143211.svg` — source, algorithm,
+      paper, colour mode, then a to-the-second local timestamp that guarantees
+      no collision. Params stay out of the name and go in the file: a
+      `<plot:settings>` JSON record in `<metadata>`, plus `<title>`/`<desc>`
+      prose built from the algorithm's own param labels. The pen list records
+      what was actually drawn, so hidden layers don't show up in it.
 - [ ] **PDF export** — the button exists in `panels/ExportPanel.jsx` but is
       hidden behind `SHOW_PDF_EXPORT`. Flip that flag when there's something
       behind it; until then the panel shouldn't advertise a feature we may

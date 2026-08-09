@@ -11,6 +11,7 @@ import { prepareImage } from './image/prepareImage.js'
 import { computeDrawArea, pathLength } from './geometry/layout.js'
 import { optimizeTravel, penUpTravel } from './geometry/optimize.js'
 import { generateLayers } from './pipeline/generate.js'
+import { plotSettings } from './export/plotMeta.js'
 import './styles/App.css'
 
 export default function App() {
@@ -113,6 +114,20 @@ export default function App() {
     [plotLayers],
   )
 
+  // What produced this plot: baked into the exported SVG and used to name it.
+  const settings = useMemo(
+    () =>
+      plotSettings({
+        sourceName: source?.name,
+        algorithmId,
+        params,
+        paperSize,
+        colorMode,
+        useK,
+      }),
+    [source, algorithmId, params, paperSize, colorMode, useK],
+  )
+
   function handleAlgorithm(id) {
     setAlgorithmId(id)
     setParams(defaultParams(algorithmsById[id]))
@@ -133,7 +148,7 @@ export default function App() {
   return (
     <div className="app">
       <div className="app__stage">
-        <header className="app__brand">◆ Plotter App</header>
+        <header className="app__brand">◆ Nib</header>
         <CanvasStage
           source={source}
           layers={plotLayers}
@@ -170,7 +185,7 @@ export default function App() {
           onPaper={setPaper}
           layers={plotLayers}
           paperSize={paperSize}
-          sourceName={source?.name}
+          settings={settings}
         />
       </aside>
     </div>

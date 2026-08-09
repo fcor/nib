@@ -12,17 +12,12 @@ export const PAPER_SIZES = [
   { value: 'a5', name: 'A5', label: 'A5 — 148 × 210 mm', width: 148, height: 210 },
 ]
 
-function svgFilename(sourceName) {
-  const base = sourceName ? sourceName.replace(/\.[^.]+$/, '') : 'plot'
-  return `${base}.svg`
-}
-
 export default function ExportPanel({
   paper,
   onPaper,
   layers,
   paperSize,
-  sourceName,
+  settings,
 }) {
   const canExport =
     layers && layers.some((l) => l.polylines.some((line) => line.length > 1))
@@ -40,7 +35,7 @@ export default function ExportPanel({
           type="button"
           className="btn btn--primary"
           disabled={!canExport}
-          onClick={() => downloadSVG(layers, paperSize, svgFilename(sourceName))}
+          onClick={() => downloadSVG(layers, paperSize, settings)}
         >
           ↧ Export SVG
         </button>
