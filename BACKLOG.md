@@ -5,6 +5,18 @@ they touch. Notes point at the files a change would most likely start from.
 
 ## Input
 
+- [x] **Try a bundled example image** — give someone who opens the tool without
+      an image at hand a one-click way to generate their first plot. The empty
+      source state should offer "or try an example image" alongside drop/browse,
+      then load a small image shipped with the app through the same
+      `prepareImage` path as an uploaded file. Keep it bundled rather than fetched
+      so the tool still works offline and preserves the no-upload/no-server
+      promise. The example should contain a useful spread of tones and edges so
+      every algorithm produces an informative result.
+      Done: `assets/examples/sample.jpg` is offered as "Geometric study" in the
+      empty Source panel. Selecting it loads a Cross-hatch CMYK preset with the
+      example's tuned parameters and process-ink colours; normal uploads continue
+      to preserve the current settings.
 - [ ] **Load an SVG and preview it as a plot** — drop in the SVG output of a
       coding sketch (p5, Processing, whatever) and see it on the sheet exactly
       like a generated plot: paper fit, path length, travel, pen colour, export.
@@ -83,6 +95,15 @@ they touch. Notes point at the files a change would most likely start from.
       across them (nearest-colour assignment, or a proper separation solved
       against the chosen inks). Biggest single item here; `color/separate.js` is
       the starting point.
+- [ ] **Risograph colour mode** — a third mode alongside mono and CMYK that
+      separates the image into a small set of spot-colour layers. Start with
+      curated two- and three-ink palettes, with editable plate colours, overprint
+      opacity in the preview, and an optional registration offset carried into
+      the exported paths. The selected algorithm still owns how each plate's tone
+      becomes plottable marks; a dots/halftone algorithm can provide the familiar
+      Riso texture without putting mark-making inside the colour pipeline. This
+      can begin as a focused preset, then share the arbitrary-ink separation
+      developed for N-colour mode.
 - [ ] **Real pen library** — actual products (Micron, Posca, Staedtler, gel
       pens…) with their true ink colour and nib width in mm, so the preview
       stroke weight and the exported line width match what will be plotted.

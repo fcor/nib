@@ -189,6 +189,79 @@
   display: block;
 }
 
+.source-example {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.source-example__label {
+  margin: 0;
+  color: var(--ink-muted);
+  font-variation-settings: var(--axis-mono);
+  font-size: 10px;
+  font-weight: var(--wght-bold);
+  line-height: 1.2;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.source-example__action {
+  width: 100%;
+  min-height: 54px;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: stretch;
+  padding: 0;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease),
+    background var(--dur) var(--ease);
+}
+
+.source-example__action:hover {
+  border-color: var(--ink-muted);
+  background: var(--rule);
+}
+
+.source-example__thumb {
+  width: 52px;
+  height: 52px;
+  display: block;
+  object-fit: cover;
+  border-right: 1px solid var(--ink);
+}
+
+.source-example__copy {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  padding: var(--space-xs);
+}
+
+.source-example__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.source-example__command {
+  flex: none;
+  color: var(--accent);
+  font-variation-settings: var(--axis-mono);
+  font-size: 11px;
+  font-weight: var(--wght-medium);
+}
+
 .source__meta {
   margin: var(--space-sm) 0 0;
   font-size: 12px;
@@ -412,6 +485,8 @@
 .penrow__picker {
   flex: none;
   width: 30px;
+  height: 100%;
+  display: block;
   padding: 0;
   border: 0;
   border-right: 1px solid var(--ink);
@@ -426,14 +501,20 @@
 /* The UA wraps the swatch in its own padded box — strip it so the colour
    reaches all four edges. */
 .penrow__picker::-webkit-color-swatch-wrapper {
+  width: 100%;
+  height: 100%;
   padding: 0;
 }
 
 .penrow__picker::-webkit-color-swatch {
+  width: 100%;
+  height: 100%;
   border: 0;
 }
 
 .penrow__picker::-moz-color-swatch {
+  width: 100%;
+  height: 100%;
   border: 0;
 }
 

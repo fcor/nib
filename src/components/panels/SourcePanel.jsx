@@ -1,18 +1,28 @@
 import { useRef, useState } from 'react'
 import Panel from './Panel.jsx'
+import sampleImageUrl from '../../assets/examples/sample.jpg'
 
-export default function SourcePanel({ source, onSource }) {
+const SAMPLE_IMAGE = {
+  name: 'sample.jpg',
+  label: 'Geometric study',
+  url: sampleImageUrl,
+}
+
+export default function SourcePanel({ source, onSource, onExample }) {
   const inputRef = useRef(null)
   const [dragOver, setDragOver] = useState(false)
 
-  function loadFile(file) {
-    if (!file || !file.type.startsWith('image/')) return
-    const url = URL.createObjectURL(file)
+  function loadImage({ name, url }, onLoad = onSource) {
     const img = new Image()
     img.onload = () => {
-      onSource({ name: file.name, url, width: img.width, height: img.height })
+      onLoad({ name, url, width: img.width, height: img.height })
     }
     img.src = url
+  }
+
+  function loadFile(file) {
+    if (!file || !file.type.startsWith('image/')) return
+    loadImage({ name: file.name, url: URL.createObjectURL(file) })
   }
 
   return (
@@ -56,6 +66,26 @@ export default function SourcePanel({ source, onSource }) {
           onChange={(e) => loadFile(e.target.files[0])}
         />
       </div>
+      {!source ? (
+        <div className="source-example">
+          <p className="source-example__label">Or try an example</p>
+          <button
+            type="button"
+            className="source-example__action"
+            onClick={() => loadImage(SAMPLE_IMAGE, onExample)}
+          >
+            <img
+              className="source-example__thumb"
+              src={SAMPLE_IMAGE.url}
+              alt=""
+            />
+            <span className="source-example__copy">
+              <span className="source-example__name">{SAMPLE_IMAGE.label}</span>
+              <span className="source-example__command">Use example</span>
+            </span>
+          </button>
+        </div>
+      ) : null}
       {source ? (
         <p className="source__meta">
           {source.name} · {source.width}×{source.height}

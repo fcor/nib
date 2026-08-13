@@ -1,0 +1,52 @@
+#!/bin/sh
+
+set -eu
+
+public_registry='https://registry.npmjs.org/'
+personal_email='fcor14@hotmail.com'
+blocked='ama''zon|amzn|code''artifact|brazil|midway|builder[-.]?mcp|a2z[.]com|aws[.]dev|A''KIA[0-9A-Z]{16}|A''SIA[0-9A-Z]{16}'
+zero='0000000000000000000000000000000000000000'
+
+registry=$(npm config get registry 2>/dev/null || true)
+if [ "$registry" != "$public_registry" ]; then
+  printf 'Push blocked: npm registry is %s\n' "$registry" >&2
+  exit 1
+fi
+
+email=$(git config --local user.email || true)
+if [ "$email" != "$personal_email" ]; then
+  printf 'Push blocked: repository Git email is %s\n' "$email" >&2
+  exit 1
+fi
+
+origin=$(git remote get-url --push origin)
+case "$origin" in
+  https://github.com/fcor/* | git@github.com:fcor/*) ;;
+  *)
+    printf 'Push blocked: origin is not under the personal fcor account.\n' >&2
+    exit 1
+    ;;
+esac
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$local_sha" = "$zero" ] && continue
+
+  if [ "$remote_sha" = "$zero" ]; then
+    revisions=$(git rev-list "$local_sha" --not --remotes=origin)
+    [ -n "$revisions" ] || revisions=$local_sha
+  else
+    revisions=$(git rev-list "$remote_sha..$local_sha")
+  fi
+
+  for revision in $revisions; do
+    matches=$(
+      git grep -I -n -i -E "$blocked" "$revision" -- . \
+        ':!.githooks/pre-push' 2>/dev/null || true
+    )
+    if [ -n "$matches" ]; then
+      printf 'Push blocked: company-specific content found in %s:\n%s\n' \
+        "$revision" "$matches" >&2
+      exit 1
+    fi
+  done
+done

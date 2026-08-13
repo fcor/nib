@@ -14,6 +14,21 @@ import { generateLayers } from './pipeline/generate.js'
 import { plotSettings } from './export/plotMeta.js'
 import './styles/App.css'
 
+const SAMPLE_ALGORITHM_ID = 'crosshatch'
+const SAMPLE_PARAMS = {
+  ...defaultParams(algorithmsById[SAMPLE_ALGORITHM_ID]),
+  whitePoint: 85,
+}
+
+function defaultChannelPens() {
+  return {
+    c: { color: DEFAULT_COLORS.c, visible: true },
+    m: { color: DEFAULT_COLORS.m, visible: true },
+    y: { color: DEFAULT_COLORS.y, visible: true },
+    k: { color: DEFAULT_COLORS.k, visible: true },
+  }
+}
+
 export default function App() {
   const [source, setSource] = useState(null)
   const [image, setImage] = useState(null) // prepared samplers
@@ -31,12 +46,7 @@ export default function App() {
     color: DEFAULT_COLORS.mono,
     visible: true,
   })
-  const [channelPens, setChannelPens] = useState({
-    c: { color: DEFAULT_COLORS.c, visible: true },
-    m: { color: DEFAULT_COLORS.m, visible: true },
-    y: { color: DEFAULT_COLORS.y, visible: true },
-    k: { color: DEFAULT_COLORS.k, visible: true },
-  })
+  const [channelPens, setChannelPens] = useState(defaultChannelPens)
 
   const paperSize = useMemo(
     () => PAPER_SIZES.find((p) => p.value === paper),
@@ -145,6 +155,16 @@ export default function App() {
     setMonoPen((prev) => ({ ...prev, ...patch }))
   }
 
+  function handleExample(nextSource) {
+    setAlgorithmId(SAMPLE_ALGORITHM_ID)
+    setParams({ ...SAMPLE_PARAMS })
+    setView('processed')
+    setColorMode('cmyk')
+    setUseK(true)
+    setChannelPens(defaultChannelPens())
+    setSource(nextSource)
+  }
+
   return (
     <div className="app">
       <div className="app__stage">
@@ -162,7 +182,11 @@ export default function App() {
       </div>
 
       <aside className="app__panels">
-        <SourcePanel source={source} onSource={setSource} />
+        <SourcePanel
+          source={source}
+          onSource={setSource}
+          onExample={handleExample}
+        />
         <AlgorithmPanel algorithmId={algorithmId} onAlgorithm={handleAlgorithm} />
         <ParametersPanel
           algorithmId={algorithmId}
