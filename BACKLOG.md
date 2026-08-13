@@ -75,12 +75,16 @@ they touch. Notes point at the files a change would most likely start from.
       identical result, and with at most four pens that's three clicks. A solo
       button would only have saved those clicks and remembered the previous
       visibility set — no capability the show/hide toggles don't already cover.
-- [ ] **Zoom into the artwork** — scroll/pinch to zoom and drag to pan the
+- [x] **Zoom into the artwork** — scroll/pinch to zoom and drag to pan the
       preview, to check stroke density and pen overlap up close. A viewport
       transform in `P5Canvas.jsx` (the `mx`/`my` mm→px mapping already funnels
       every coordinate through one place), not a change to the plot itself —
       distinct from scaling the artwork on the sheet. Wants a "fit to sheet"
       reset and a zoom-level indicator.
+      Done: `geometry/viewport.js` keeps a tested paper-space camera independent
+      from plot geometry. Wheel, pinch, drag, keyboard, stepped icon controls,
+      and fit-to-sheet share that transform; source/plot comparison preserves
+      the same view, while new sources and paper sizes reset it.
 
 ## Design & path editing
 

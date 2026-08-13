@@ -69,6 +69,14 @@
   position: absolute;
   top: 0;
   right: 0;
+  z-index: 2;
+}
+
+.stage__zoom {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
 }
 
 .stage__readout {
@@ -76,6 +84,85 @@
   left: 0;
   bottom: 0;
   max-width: 22rem;
+  pointer-events: none;
+}
+
+.p5-canvas {
+  outline: 0;
+}
+
+.p5-canvas:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.p5-canvas canvas {
+  touch-action: none;
+}
+
+.p5-canvas[data-can-pan='true'] canvas {
+  cursor: grab;
+}
+
+.p5-canvas--dragging canvas {
+  cursor: grabbing;
+}
+
+/* ── Zoom controls ─────────────────────────────────────────────────── */
+.zoom-controls {
+  display: inline-flex;
+  height: 34px;
+  overflow: hidden;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-variation-settings: var(--axis-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.zoom-controls__button,
+.zoom-controls__value {
+  width: 34px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  border: 0;
+  border-right: 1px solid var(--ink);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.zoom-controls__button {
+  padding: 0;
+  cursor: pointer;
+}
+
+.zoom-controls__button:hover:not(:disabled) {
+  background: var(--rule);
+}
+
+.zoom-controls__button:disabled {
+  color: var(--ink-faint);
+  cursor: not-allowed;
+}
+
+.zoom-controls__button:last-child {
+  border-right: 0;
+}
+
+.zoom-controls__button svg {
+  width: 17px;
+  height: 17px;
+  stroke-width: 1.5;
+}
+
+.zoom-controls__value {
+  width: 52px;
+  margin: 0;
+  font: inherit;
+  font-size: 12px;
+  font-weight: var(--wght-medium);
 }
 
 /* ── Readout ────────────────────────────────────────────────────────── */

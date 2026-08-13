@@ -38,6 +38,8 @@ Inkscape, or any plotter toolchain.
 - **Live readouts.** Path length, pen-up travel, and an approximate plot time
   based on the default AxiDraw V3 speed, acceleration, and pen-lift settings.
   Manual pen swaps are listed separately.
+- **Inspect up close.** Zoom around the pointer, pinch, or drag the sheet to
+  inspect individual strokes without changing the exported plot.
 - **A3 / A4 / A5**, with the artwork fitted to the sheet inside its margins.
 
 ## Export

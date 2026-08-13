@@ -1,5 +1,17 @@
+import { useCallback, useEffect, useState } from 'react'
 import P5Canvas from './P5Canvas.jsx'
 import SegmentedControl from './controls/SegmentedControl.jsx'
+import ZoomControls from './controls/ZoomControls.jsx'
+import { canvasTheme as T } from '../styles/canvasTheme.js'
+import {
+  MAX_ZOOM,
+  MIN_ZOOM,
+  constrainViewport,
+  createViewport,
+  isFitViewport,
+  stepZoom,
+  zoomAt,
+} from '../geometry/viewport.js'
 
 const VIEW_OPTIONS = [
   { value: 'original', label: 'Source image' },
@@ -43,6 +55,47 @@ export default function CanvasStage({
   view,
   onView,
 }) {
+  const [viewport, setViewport] = useState(() => createViewport(paperSize))
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 })
+  const canNavigate = Boolean(source && paperSize)
+
+  useEffect(() => {
+    setViewport(createViewport(paperSize))
+  }, [source?.url, paperSize?.width, paperSize?.height])
+
+  useEffect(() => {
+    if (!canvasSize.width || !canvasSize.height) return
+    setViewport((current) =>
+      constrainViewport(current, canvasSize, paperSize, T.pad),
+    )
+  }, [canvasSize, paperSize])
+
+  const handleCanvasSize = useCallback((size) => {
+    setCanvasSize((current) =>
+      current.width === size.width && current.height === size.height
+        ? current
+        : size,
+    )
+  }, [])
+
+  function changeZoom(direction) {
+    setViewport((current) => {
+      const nextZoom = stepZoom(current.zoom, direction)
+      return zoomAt(
+        current,
+        nextZoom,
+        { x: canvasSize.width / 2, y: canvasSize.height / 2 },
+        canvasSize,
+        paperSize,
+        T.pad,
+      )
+    })
+  }
+
+  function fitSheet() {
+    setViewport(createViewport(paperSize))
+  }
+
   return (
     <div className="stage">
       <div className="stage__canvas">
@@ -52,12 +105,30 @@ export default function CanvasStage({
           drawArea={drawArea}
           paperSize={paperSize}
           view={view}
+          viewport={viewport}
+          interactive={canNavigate}
+          onViewportChange={setViewport}
+          onCanvasSize={handleCanvasSize}
         />
       </div>
 
       <div className="stage__view">
         <SegmentedControl value={view} options={VIEW_OPTIONS} onChange={onView} />
       </div>
+
+      {canNavigate ? (
+        <div className="stage__zoom">
+          <ZoomControls
+            zoom={viewport.zoom}
+            canZoomOut={viewport.zoom > MIN_ZOOM}
+            canZoomIn={viewport.zoom < MAX_ZOOM}
+            canFit={!isFitViewport(viewport, paperSize)}
+            onZoomOut={() => changeZoom(-1)}
+            onZoomIn={() => changeZoom(1)}
+            onFit={fitSheet}
+          />
+        </div>
+      ) : null}
 
       <div className="stage__readout readout">
         <Readout
