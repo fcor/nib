@@ -4,10 +4,11 @@ import { rgbToCMYK } from '../color/separate.js'
 /**
  * Produce plot layers from the current inputs.
  *
- * A layer is { pen, polylines }. Mono mode returns one layer (brightness →
- * tone) drawn with the active pen. CMYK mode returns one layer per ink channel:
- * each runs the same algorithm, but its tone comes from that channel's ink
- * amount, and `_offset` interleaves the layers so overlapping colors mix.
+ * A layer is { pen, polylines, preserveOrder }. Mono mode returns one layer
+ * (brightness → tone) drawn with the active pen. CMYK mode returns one layer per
+ * ink channel: each runs the same algorithm, but its tone comes from that
+ * channel's ink amount. `_offset` interleaves compatible algorithms, while
+ * `_channel` lets screen-based algorithms choose channel-specific geometry.
  */
 export function generateLayers({ image, algorithm, params, area, color }) {
   if (!image || !area || !algorithm.process) return []
@@ -16,7 +17,11 @@ export function generateLayers({ image, algorithm, params, area, color }) {
     if (!color.activePen.visible) return []
     const tone = (nx, ny) =>
       toneFromBrightness(image.sample(nx, ny), params.whitePoint, params.invert)
-    return [{ pen: color.activePen, polylines: algorithm.process(tone, params, area) }]
+    return [{
+      pen: color.activePen,
+      polylines: algorithm.process(tone, params, area),
+      preserveOrder: algorithm.preserveOrder === true,
+    }]
   }
 
   // CMYK: one layer per active channel.
@@ -37,8 +42,16 @@ export function generateLayers({ image, algorithm, params, area, color }) {
       // Reuse the tonal white-point remap by treating ink amount as darkness.
       return toneFromBrightness(1 - ink, params.whitePoint, false)
     }
-    const layerParams = { ...params, _offset: i / channels.length }
-    layers.push({ pen, polylines: algorithm.process(tone, layerParams, area) })
+    const layerParams = {
+      ...params,
+      _offset: i / channels.length,
+      _channel: ch,
+    }
+    layers.push({
+      pen,
+      polylines: algorithm.process(tone, layerParams, area),
+      preserveOrder: algorithm.preserveOrder === true,
+    })
   })
   return layers
 }

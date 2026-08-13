@@ -82,6 +82,17 @@ they touch. Notes point at the files a change would most likely start from.
       distinct from scaling the artwork on the sheet. Wants a "fit to sheet"
       reset and a zoom-level indicator.
 
+## Design & path editing
+
+- [ ] **Editable design mode** — open generated plots and imported SVG artwork
+      in the same path-level canvas. Select, move, and delete individual paths to
+      clean up image-mode output; select closed SVG shapes and assign a pen plus
+      a fill technique; preserve source layers where useful. This needs a common
+      plot document model above `pipeline/generate.js`, canvas hit-testing,
+      multi-selection, and undo/redo. SVG import supplies the shapes and the
+      shared fill-techniques item supplies hatch, contour, dots, scribble, and
+      other plottable fills.
+
 ## Colour
 
 - [x] **Colour picker** — pick an arbitrary ink colour rather than choosing from
@@ -126,8 +137,12 @@ they touch. Notes point at the files a change would most likely start from.
       `process()`, and it isn't listed in `algorithms/index.js`, so it never
       shows up in the UI. Needs weighted dot placement (Poisson/Lloyd relaxation
       against the tone map) and registering.
-- [ ] **Dots only / solo puntos** — the simpler cousin of stipple: fixed grid,
+- [x] **Dots only / solo puntos** — the simpler cousin of stipple: fixed grid,
       dot size driven by tone, no relaxation.
+      Done: `algorithms/dots.js` averages each grid cell and maps tone to dot
+      area. `fills/spiralDisk.js` turns every dot into one pen-width-aware,
+      center-out path; CMYK plates use conventional screen angles, and the
+      generated serpentine order avoids quadratic travel optimization.
 - [ ] **Circles only / solo círculos** — concentric or scattered circles sized
       by local tone.
 - [x] **Pixel art** — quantise to a coarse grid and fill each cell.
@@ -135,7 +150,8 @@ they touch. Notes point at the files a change would most likely start from.
 - [ ] **Fill techniques** — a shared set of fills (hatch, contour-following,
       concentric, scribble, Hilbert/space-filling) that algorithms can call
       into, instead of each one inventing its own. Would live alongside
-      `algorithms/` as something like `fills/`.
+      `algorithms/` as `fills/`; the spiral-disk fill used by Halftone Dots is
+      the first primitive there.
 - [ ] **Edge/contour tracing** — outline pass that can be layered under any
       fill.
 
@@ -160,5 +176,10 @@ they touch. Notes point at the files a change would most likely start from.
       never build.
 - [ ] **Per-layer file export** — one SVG per pen for multi-colour plots that
       are run as separate passes.
-- [ ] **Plot time estimate** — from path length + travel + pen-up count, so the
+- [x] **Plot time estimate** — from path length + travel + pen-up count, so the
       readout says "about 12 minutes", not just millimetres.
+      Done: `geometry/plotTime.js` simulates the default AxiDraw V3 motion
+      profile, including acceleration, corner speeds, short moves, pen lifts,
+      portrait auto-rotation, and the return home. The readout identifies that
+      profile and lists manual pen swaps separately so they are not mistaken for
+      timed machine motion.

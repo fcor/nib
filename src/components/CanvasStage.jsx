@@ -12,6 +12,17 @@ function formatLength(mm) {
   return `${Math.round(mm)} mm`
 }
 
+function formatDuration(seconds) {
+  if (seconds < 60) return `~${Math.max(5, Math.round(seconds / 5) * 5)} sec`
+
+  const minutes = Math.max(1, Math.round(seconds / 60))
+  if (minutes < 60) return `~${minutes} min`
+
+  const hours = Math.floor(minutes / 60)
+  const remainder = minutes % 60
+  return `~${hours} h${remainder ? ` ${remainder} min` : ''}`
+}
+
 function Readout({ label, value }) {
   return (
     <div className="readout__row">
@@ -28,6 +39,7 @@ export default function CanvasStage({
   paperSize,
   pathLen,
   travelLen,
+  plotEstimate,
   view,
   onView,
 }) {
@@ -68,6 +80,17 @@ export default function CanvasStage({
         />
         {travelLen ? (
           <Readout label="Travel moves" value={formatLength(travelLen)} />
+        ) : null}
+        {plotEstimate?.seconds ? (
+          <Readout
+            label="Plot time"
+            value={
+              formatDuration(plotEstimate.seconds) +
+              (plotEstimate.penChanges
+                ? ` + ${plotEstimate.penChanges} pen swap${plotEstimate.penChanges > 1 ? 's' : ''}`
+                : '')
+            }
+          />
         ) : null}
       </div>
     </div>

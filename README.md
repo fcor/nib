@@ -21,6 +21,8 @@ Inkscape, or any plotter toolchain.
 - **Spiral Halftone** — one spiral from the centre, radial wiggle mapping tone.
 - **Cross-hatch** — layered angled strokes; darker areas add more layers.
 - **Pixel Art** — a coarse square grid, each cell filled by tone.
+- **Halftone Dots** — a physical dot screen, each mark filled by one continuous
+  pen-width-aware spiral.
 
 ## Features
 
@@ -33,8 +35,9 @@ Inkscape, or any plotter toolchain.
   Hidden layers drop out of the preview, the export, and the readouts together.
 - **Travel optimised.** Strokes are reordered to cut pen-up movement. It can't
   change the artwork, only the order it's drawn in, so it's always on.
-- **Live readouts.** Path length and pen-up travel in millimetres, updating as
-  you tune.
+- **Live readouts.** Path length, pen-up travel, and an approximate plot time
+  based on the default AxiDraw V3 speed, acceleration, and pen-lift settings.
+  Manual pen swaps are listed separately.
 - **A3 / A4 / A5**, with the artwork fitted to the sheet inside its margins.
 
 ## Export

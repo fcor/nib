@@ -2,9 +2,10 @@ import { serpentine } from './serpentine.js'
 import { spiral } from './spiral.js'
 import { crosshatch } from './crosshatch.js'
 import { pixelart } from './pixelart.js'
+import { dots } from './dots.js'
 
 /** Ordered list of available algorithms. Add new techniques here. */
-export const algorithms = [serpentine, spiral, crosshatch, pixelart]
+export const algorithms = [serpentine, spiral, crosshatch, pixelart, dots]
 
 export const algorithmsById = Object.fromEntries(
   algorithms.map((a) => [a.id, a]),

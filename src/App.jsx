@@ -9,7 +9,8 @@ import { algorithmsById, defaultParams } from './algorithms/index.js'
 import { PEN_WIDTH, DEFAULT_COLORS } from './pens/pens.js'
 import { prepareImage } from './image/prepareImage.js'
 import { computeDrawArea, pathLength } from './geometry/layout.js'
-import { optimizeTravel, penUpTravel } from './geometry/optimize.js'
+import { optimizeTravel } from './geometry/optimize.js'
+import { estimateAxiDrawV3 } from './geometry/plotTime.js'
 import { generateLayers } from './pipeline/generate.js'
 import { plotSettings } from './export/plotMeta.js'
 import './styles/App.css'
@@ -101,16 +102,17 @@ export default function App() {
     [image, algorithmId, params, drawArea, color],
   )
 
-  // Reorder each layer's strokes to cut pen-up travel. Always on: it can't
-  // change the artwork, only the order strokes are drawn in, and it saves the
-  // overwhelming majority of wasted movement. Media that wants a different
-  // draw order (wet ink, directional nibs) is a property of the pen, not a
-  // question to put to the user — see BACKLOG.md.
+  // Most algorithms benefit from greedy travel optimization. Dense grid
+  // algorithms can provide an intentional serpentine order instead: running the
+  // quadratic optimizer over thousands of dots would be prohibitively slower
+  // and would discard that deliberate ordering.
   const plotLayers = useMemo(
     () =>
       layers.map((l) => ({
         ...l,
-        polylines: optimizeTravel(l.polylines),
+        polylines: l.preserveOrder
+          ? l.polylines
+          : optimizeTravel(l.polylines),
       })),
     [layers],
   )
@@ -119,9 +121,9 @@ export default function App() {
     () => plotLayers.reduce((sum, l) => sum + pathLength(l.polylines), 0),
     [plotLayers],
   )
-  const travelLen = useMemo(
-    () => plotLayers.reduce((sum, l) => sum + penUpTravel(l.polylines), 0),
-    [plotLayers],
+  const plotEstimate = useMemo(
+    () => estimateAxiDrawV3(plotLayers, paperSize),
+    [plotLayers, paperSize],
   )
 
   // What produced this plot: baked into the exported SVG and used to name it.
@@ -175,7 +177,8 @@ export default function App() {
           drawArea={drawArea}
           paperSize={paperSize}
           pathLen={pathLen}
-          travelLen={travelLen}
+          travelLen={plotEstimate.penUpMm}
+          plotEstimate={plotEstimate}
           view={view}
           onView={setView}
         />
