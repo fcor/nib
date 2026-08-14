@@ -109,16 +109,24 @@ they touch. Notes point at the files a change would most likely start from.
       pens/colours as you like and let the app work out how to split the image
       across them (nearest-colour assignment, or a proper separation solved
       against the chosen inks). Biggest single item here; `color/separate.js` is
-      the starting point.
-- [ ] **Risograph colour mode** — a third mode alongside mono and CMYK that
-      separates the image into a small set of spot-colour layers. Start with
-      curated two- and three-ink palettes, with editable plate colours, overprint
-      opacity in the preview, and an optional registration offset carried into
-      the exported paths. The selected algorithm still owns how each plate's tone
-      becomes plottable marks; a dots/halftone algorithm can provide the familiar
-      Riso texture without putting mark-making inside the colour pipeline. This
-      can begin as a focused preset, then share the arbitrary-ink separation
-      developed for N-colour mode.
+      the starting point. The reusable core now exists:
+      `color/spotSeparation.js` accepts an arbitrary ink array and solves bounded
+      coverages in optical-density space. The remaining work is the N-ink UI,
+      palette management, and performance limits for larger ink sets.
+- [x] **Risograph colour mode** — a third mode alongside mono and CMYK that
+      separates the image into two editable spot-colour layers. The selected
+      algorithm still owns how each plate's tone becomes plottable marks, so a
+      dots/halftone algorithm can provide the familiar Riso texture without
+      putting mark-making inside the colour pipeline.
+      Done: `Riso` offers four curated two-ink palettes plus editable colours.
+      A reusable arbitrary-N Beer-Lambert solver separates the source into spot
+      tone plates, every algorithm receives stable generic layer offsets, and
+      export writes one named SVG layer per visible ink with the full palette in
+      metadata.
+- [ ] **Risograph refinements** — add overprint simulation, optional
+      registration offsets, and curated three-ink palettes. The solver and
+      array-based ink state already scale past two inks; this is now preview and
+      control work rather than another separation implementation.
 - [ ] **Real pen library** — actual products (Micron, Posca, Staedtler, gel
       pens…) with their true ink colour and nib width in mm, so the preview
       stroke weight and the exported line width match what will be plotted.

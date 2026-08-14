@@ -46,6 +46,8 @@ export function plotSettings({
   paperSize,
   colorMode,
   useK,
+  risoPaletteId,
+  risoPens = [],
 }) {
   return {
     app: 'nib',
@@ -59,9 +61,22 @@ export function plotSettings({
       width: paperSize.width,
       height: paperSize.height,
     },
-    // `useK` only means something in CMYK — leave it off a mono record rather
-    // than storing a value that never applied.
-    color: colorMode === 'cmyk' ? { mode: 'cmyk', useK } : { mode: 'mono' },
+    // Keep mode-specific state together so a future SVG import can restore it.
+    color:
+      colorMode === 'cmyk'
+        ? { mode: 'cmyk', useK }
+        : colorMode === 'riso'
+          ? {
+              mode: 'riso',
+              palette: risoPaletteId,
+              inks: risoPens.map(({ id, name, color, visible }) => ({
+                id,
+                name,
+                color,
+                visible,
+              })),
+            }
+          : { mode: 'mono' },
   }
 }
 
@@ -95,19 +110,21 @@ export function plotSummary(settings) {
   const bits = [algo ? algo.name : settings.algorithm]
 
   bits.push(`${settings.paper.name} ${settings.paper.width}×${settings.paper.height} mm`)
-  bits.push(
-    settings.color.mode === 'cmyk'
-      ? settings.color.useK
-        ? 'CMYK'
-        : 'CMY'
-      : 'Mono',
-  )
+  if (settings.color.mode === 'cmyk') {
+    bits.push(settings.color.useK ? 'CMYK' : 'CMY')
+  } else if (settings.color.mode === 'riso') {
+    const inks = settings.color.inks.map((ink) => ink.name).join(' + ')
+    bits.push(inks ? `Riso (${inks})` : 'Riso')
+  } else {
+    bits.push('Mono')
+  }
 
   if (algo) {
     const shown = algo.params
       .map((p) => {
         const v = settings.params[p.key]
         if (v === undefined) return null
+        if (p.key === 'invert' && settings.color.mode !== 'mono') return null
         // A toggle reads as its label when on, and says nothing when off.
         if (p.type === 'toggle') return v ? p.label.toLowerCase() : null
         return `${p.label.toLowerCase()} ${withUnit(v, p.unit)}`

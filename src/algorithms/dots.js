@@ -8,6 +8,10 @@ const SCREEN_ANGLES = {
   k: 45,
 }
 
+// Spot colours use the same proven separations before falling back to evenly
+// spaced angles. The layer index keeps this independent of any ink naming.
+const SPOT_SCREEN_ANGLES = [15, 75, 0, 45]
+
 const SAMPLE_OFFSETS = [-0.28, 0, 0.28]
 
 function clamp01(value) {
@@ -44,7 +48,12 @@ function averageCellTone(tone, cx, cy, spacing, angle, area) {
 
 function screenAngle(params) {
   const base = Number(params.angle) || 0
-  const channelOffset = params._channel ? SCREEN_ANGLES[params._channel] ?? 0 : 0
+  let channelOffset = params._channel ? SCREEN_ANGLES[params._channel] ?? 0 : 0
+  if (!params._channel && Number.isInteger(params._layerIndex)) {
+    channelOffset =
+      SPOT_SCREEN_ANGLES[params._layerIndex] ??
+      (params._layerIndex * 180) / Math.max(1, params._layerCount)
+  }
   return ((base + channelOffset) * Math.PI) / 180
 }
 

@@ -78,6 +78,20 @@ test('Halftone Dots uses conventional CMYK screen angles', () => {
   }
 })
 
+test('Halftone Dots separates generic spot-colour layers', () => {
+  const expected = [15, 75, 0]
+
+  for (const [index, degrees] of expected.entries()) {
+    const paths = dots.process(
+      () => 1,
+      { ...params, _layerIndex: index, _layerCount: expected.length },
+      area,
+    )
+    const actual = normalizedScreenAngle(paths[0])
+    assert.ok(Math.abs(actual - (degrees * Math.PI) / 180) < 1e-9)
+  }
+})
+
 test('Halftone Dots only samples normalized image coordinates', () => {
   const samples = []
   dots.process((x, y) => {

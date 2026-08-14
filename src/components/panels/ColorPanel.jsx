@@ -2,6 +2,11 @@ import { useEffect, useState } from 'react'
 import Panel from './Panel.jsx'
 import Toggle from '../controls/Toggle.jsx'
 import SegmentedControl from '../controls/SegmentedControl.jsx'
+import Select from '../controls/Select.jsx'
+import {
+  CUSTOM_RISO_PALETTE_ID,
+  RISO_PALETTES,
+} from '../../color/risoPalettes.js'
 
 const HEX = /^#[0-9a-f]{6}$/i
 
@@ -64,8 +69,8 @@ function EyeIcon() {
  * to show or hide and the eye is dropped entirely. The frame ghosts to
  * `--rule` and the swatch hatches over, print-convention style for "no plate".
  */
-function PenRow({ letter, pen, onChange, disabled = false }) {
-  const name = letter ? `${letter} channel` : 'Pen'
+function PenRow({ letter, pen, onChange, disabled = false, label }) {
+  const name = label || (letter ? `${letter} channel` : 'Pen')
 
   return (
     <div
@@ -127,7 +132,19 @@ export default function ColorPanel({
   onUseK,
   channelPens,
   onChannelPen,
+  risoPaletteId,
+  onRisoPalette,
+  risoPens,
+  onRisoPen,
 }) {
+  const paletteOptions = RISO_PALETTES.map((palette) => ({
+    value: palette.id,
+    label: palette.name,
+  }))
+  if (risoPaletteId === CUSTOM_RISO_PALETTE_ID) {
+    paletteOptions.push({ value: CUSTOM_RISO_PALETTE_ID, label: 'Custom' })
+  }
+
   return (
     <Panel step={4} title="Color">
       <SegmentedControl
@@ -135,13 +152,14 @@ export default function ColorPanel({
         options={[
           { value: 'mono', label: 'Mono' },
           { value: 'cmyk', label: 'CMYK' },
+          { value: 'riso', label: 'Riso' },
         ]}
         onChange={onMode}
       />
 
       {colorMode === 'mono' ? (
         <PenRow pen={monoPen} onChange={onMonoPen} />
-      ) : (
+      ) : colorMode === 'cmyk' ? (
         <>
           <PenRow letter="C" pen={channelPens.c} onChange={(p) => onChannelPen('c', p)} />
           <PenRow letter="M" pen={channelPens.m} onChange={(p) => onChannelPen('m', p)} />
@@ -155,6 +173,24 @@ export default function ColorPanel({
           {/* Not a visibility switch — this changes the separation itself, so
               black gets redistributed into C/M/Y rather than just going dark. */}
           <Toggle label="Black (K)" value={useK} onChange={onUseK} />
+        </>
+      ) : (
+        <>
+          <Select
+            label="Palette"
+            value={risoPaletteId}
+            options={paletteOptions}
+            onChange={onRisoPalette}
+          />
+          {risoPens.map((pen, index) => (
+            <PenRow
+              key={pen.id}
+              letter={String(index + 1)}
+              label={pen.name}
+              pen={pen}
+              onChange={(patch) => onRisoPen(index, patch)}
+            />
+          ))}
         </>
       )}
     </Panel>

@@ -7,6 +7,12 @@ import ColorPanel from './components/panels/ColorPanel.jsx'
 import ExportPanel, { PAPER_SIZES } from './components/panels/ExportPanel.jsx'
 import { algorithmsById, defaultParams } from './algorithms/index.js'
 import { PEN_WIDTH, DEFAULT_COLORS } from './pens/pens.js'
+import {
+  CUSTOM_RISO_PALETTE_ID,
+  DEFAULT_RISO_PALETTE_ID,
+  risoPaletteById,
+  risoPensForPalette,
+} from './color/risoPalettes.js'
 import { prepareImage } from './image/prepareImage.js'
 import { computeDrawArea, pathLength } from './geometry/layout.js'
 import { optimizeTravel } from './geometry/optimize.js'
@@ -48,6 +54,8 @@ export default function App() {
     visible: true,
   })
   const [channelPens, setChannelPens] = useState(defaultChannelPens)
+  const [risoPaletteId, setRisoPaletteId] = useState(DEFAULT_RISO_PALETTE_ID)
+  const [risoPens, setRisoPens] = useState(risoPensForPalette)
 
   const paperSize = useMemo(
     () => PAPER_SIZES.find((p) => p.value === paper),
@@ -86,8 +94,9 @@ export default function App() {
         y: { ...channelPens.y, name: 'Y', width: PEN_WIDTH },
         k: { ...channelPens.k, name: 'K', width: PEN_WIDTH },
       },
+      spotPens: risoPens.map((pen) => ({ ...pen, width: PEN_WIDTH })),
     }),
-    [colorMode, useK, monoPen, channelPens],
+    [colorMode, useK, monoPen, channelPens, risoPens],
   )
 
   const layers = useMemo(
@@ -136,8 +145,19 @@ export default function App() {
         paperSize,
         colorMode,
         useK,
+        risoPaletteId,
+        risoPens,
       }),
-    [source, algorithmId, params, paperSize, colorMode, useK],
+    [
+      source,
+      algorithmId,
+      params,
+      paperSize,
+      colorMode,
+      useK,
+      risoPaletteId,
+      risoPens,
+    ],
   )
 
   function handleAlgorithm(id) {
@@ -155,6 +175,36 @@ export default function App() {
 
   function handleMonoPen(patch) {
     setMonoPen((prev) => ({ ...prev, ...patch }))
+  }
+
+  function handleRisoPalette(id) {
+    const palette = risoPaletteById(id)
+    setRisoPaletteId(palette.id)
+    setRisoPens((current) =>
+      palette.inks.map((ink, index) => ({
+        id: `spot-${index + 1}`,
+        name: ink.name,
+        color: ink.color,
+        visible: current[index]?.visible ?? true,
+      })),
+    )
+  }
+
+  function handleRisoPen(index, patch) {
+    if (patch.color) setRisoPaletteId(CUSTOM_RISO_PALETTE_ID)
+    setRisoPens((current) =>
+      current.map((pen, penIndex) =>
+        penIndex === index
+          ? {
+              ...pen,
+              ...patch,
+              name: patch.color
+                ? `Ink ${index + 1} (${patch.color.toUpperCase()})`
+                : pen.name,
+            }
+          : pen,
+      ),
+    )
   }
 
   function handleExample(nextSource) {
@@ -206,6 +256,10 @@ export default function App() {
           onUseK={setUseK}
           channelPens={channelPens}
           onChannelPen={handleChannelPen}
+          risoPaletteId={risoPaletteId}
+          onRisoPalette={handleRisoPalette}
+          risoPens={risoPens}
+          onRisoPen={handleRisoPen}
         />
         <ExportPanel
           paper={paper}

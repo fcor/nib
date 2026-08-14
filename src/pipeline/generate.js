@@ -1,14 +1,15 @@
 import { toneFromBrightness } from '../image/tone.js'
 import { rgbToCMYK } from '../color/separate.js'
+import { createSpotSeparator } from '../color/spotSeparation.js'
 
 /**
  * Produce plot layers from the current inputs.
  *
  * A layer is { pen, polylines, preserveOrder }. Mono mode returns one layer
- * (brightness → tone) drawn with the active pen. CMYK mode returns one layer per
- * ink channel: each runs the same algorithm, but its tone comes from that
- * channel's ink amount. `_offset` interleaves compatible algorithms, while
- * `_channel` lets screen-based algorithms choose channel-specific geometry.
+ * (brightness → tone) drawn with the active pen. Separated modes return one
+ * layer per ink: each runs the same algorithm, but its tone comes from that
+ * ink's coverage. `_offset` interleaves compatible algorithms, `_channel` keeps
+ * CMYK screen conventions, and generic layer indices support arbitrary inks.
  */
 export function generateLayers({ image, algorithm, params, area, color }) {
   if (!image || !area || !algorithm.process) return []
@@ -23,6 +24,38 @@ export function generateLayers({ image, algorithm, params, area, color }) {
       preserveOrder: algorithm.preserveOrder === true,
     }]
   }
+
+  if (color.mode === 'riso') {
+    const pens = Array.isArray(color.spotPens) ? color.spotPens : []
+    const separate = createSpotSeparator(pens.map((pen) => pen.color))
+    const layers = []
+
+    pens.forEach((pen, index) => {
+      if (!pen?.visible) return
+      const tone = (nx, ny) => {
+        const coverage = separate(image.sampleRGB(nx, ny))[index] || 0
+        return toneFromBrightness(1 - coverage, params.whitePoint, false)
+      }
+      layers.push({
+        pen,
+        polylines: algorithm.process(
+          tone,
+          {
+            ...params,
+            _offset: index / pens.length,
+            _layerIndex: index,
+            _layerCount: pens.length,
+          },
+          area,
+        ),
+        preserveOrder: algorithm.preserveOrder === true,
+      })
+    })
+
+    return layers
+  }
+
+  if (color.mode !== 'cmyk') return []
 
   // CMYK: one layer per active channel.
   //
@@ -46,6 +79,8 @@ export function generateLayers({ image, algorithm, params, area, color }) {
       ...params,
       _offset: i / channels.length,
       _channel: ch,
+      _layerIndex: i,
+      _layerCount: channels.length,
     }
     layers.push({
       pen,

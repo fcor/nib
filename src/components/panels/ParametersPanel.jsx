@@ -7,11 +7,11 @@ import { algorithmsById } from '../../algorithms/index.js'
 export default function ParametersPanel({ algorithmId, params, onParam, colorMode }) {
   const algorithm = algorithmsById[algorithmId]
 
-  // In CMYK each layer's tone is an ink amount, not brightness, so the
+  // In separated modes each layer's tone is an ink amount, not brightness, so the
   // separation already decides what's dark — `generate.js` passes `false` for
   // invert there and the control has nothing to act on.
   const visible = algorithm.params.filter(
-    (p) => !(p.key === 'invert' && colorMode === 'cmyk'),
+    (p) => !(p.key === 'invert' && colorMode !== 'mono'),
   )
 
   return (
