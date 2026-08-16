@@ -173,14 +173,13 @@ export default function P5Canvas({
 
     const instance = new p5(sketch, el)
     instanceRef.current = instance
-    const canvas = instance.canvas
 
     function canvasSize() {
       return { width: instance.width, height: instance.height }
     }
 
     function localPoint(event) {
-      const rect = canvas.getBoundingClientRect()
+      const rect = el.getBoundingClientRect()
       return {
         x: ((event.clientX - rect.left) / rect.width) * instance.width,
         y: ((event.clientY - rect.top) / rect.height) * instance.height,
@@ -246,7 +245,7 @@ export default function P5Canvas({
 
       event.preventDefault()
       el.focus({ preventScroll: true })
-      canvas.setPointerCapture(event.pointerId)
+      el.setPointerCapture(event.pointerId)
       pointers.set(event.pointerId, localPoint(event))
       el.classList.add('p5-canvas--dragging')
     }
@@ -288,8 +287,8 @@ export default function P5Canvas({
     function finishPointer(event) {
       if (!pointers.has(event.pointerId)) return
       pointers.delete(event.pointerId)
-      if (canvas.hasPointerCapture(event.pointerId)) {
-        canvas.releasePointerCapture(event.pointerId)
+      if (el.hasPointerCapture(event.pointerId)) {
+        el.releasePointerCapture(event.pointerId)
       }
       if (!pointers.size) el.classList.remove('p5-canvas--dragging')
     }
@@ -339,11 +338,11 @@ export default function P5Canvas({
       )
     }
 
-    canvas.addEventListener('wheel', handleWheel, { passive: false })
-    canvas.addEventListener('pointerdown', handlePointerDown)
-    canvas.addEventListener('pointermove', handlePointerMove)
-    canvas.addEventListener('pointerup', finishPointer)
-    canvas.addEventListener('pointercancel', finishPointer)
+    el.addEventListener('wheel', handleWheel, { passive: false })
+    el.addEventListener('pointerdown', handlePointerDown)
+    el.addEventListener('pointermove', handlePointerMove)
+    el.addEventListener('pointerup', finishPointer)
+    el.addEventListener('pointercancel', finishPointer)
     el.addEventListener('keydown', handleKeyDown)
 
     const observer = new ResizeObserver(([entry]) => {
@@ -370,11 +369,11 @@ export default function P5Canvas({
       live = false
       if (redrawFrame) cancelAnimationFrame(redrawFrame)
       pointers.clear()
-      canvas.removeEventListener('wheel', handleWheel)
-      canvas.removeEventListener('pointerdown', handlePointerDown)
-      canvas.removeEventListener('pointermove', handlePointerMove)
-      canvas.removeEventListener('pointerup', finishPointer)
-      canvas.removeEventListener('pointercancel', finishPointer)
+      el.removeEventListener('wheel', handleWheel)
+      el.removeEventListener('pointerdown', handlePointerDown)
+      el.removeEventListener('pointermove', handlePointerMove)
+      el.removeEventListener('pointerup', finishPointer)
+      el.removeEventListener('pointercancel', finishPointer)
       el.removeEventListener('keydown', handleKeyDown)
       observer.disconnect()
       instance.remove()
